@@ -1,3 +1,10 @@
+/*
+ *  James Ostmann & Joshua Grovan
+ *  COMP 350 / 001
+ *  Sep, 26th 2020
+ *  Ash Shell Project Checkpoint 1
+*/
+
 #include <iostream>
 #include <string>
 #include <cctype>
