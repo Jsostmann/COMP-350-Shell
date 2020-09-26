@@ -5,13 +5,16 @@
 #include <cstdlib>
 #include <cstdio>
 
+#define ESC "\e[0m"
+#define AUTHOR "\e[40;38;5;82;4m"
+#define ESC_AUTHOR "\e[0;24m"
 #define PROMPT "\e[33;1ma\e[0m\e[34;1ms\e[0m\e[33;1mh\e[0m>"
 
 using namespace std;
 
 void exit() {
-  cout << "Thank you for using our aggie shell" << endl;
-  cout << "Made By: " << "Joshua Grovan, & James Ostmann" << endl;
+  cout << "Thank you for using our Aggie Shell!" << endl;
+  cout << "Made By: " << AUTHOR << "Joshua Grovan"<< ESC_AUTHOR << " & " << AUTHOR << "James Ostmann" << ESC_AUTHOR << endl;
   exit(0);
 }
 
