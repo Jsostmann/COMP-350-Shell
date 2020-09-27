@@ -21,7 +21,7 @@ using namespace std;
 
 void exit() {
   cout << "Thank you for using our Aggie Shell!" << endl;
-  cout << "Made By: " << AUTHOR << "Joshua Grovan"<< ESC_AUTHOR << " & " << AUTHOR << "James Ostmann" << ESC_AUTHOR << endl;
+  cout << "Made By: " << AUTHOR << "Joshua Govan"<< ESC_AUTHOR << " & " << AUTHOR << "James Ostmann" << ESC_AUTHOR << endl;
   exit(0);
 }
 
