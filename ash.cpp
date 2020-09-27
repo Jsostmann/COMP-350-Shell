@@ -1,5 +1,5 @@
 /*
- *  James Ostmann & Joshua Grovan
+ *  James Ostmann & Joshua Govan
  *  COMP 350 / 001
  *  Sep, 26th 2020
  *  Ash Shell Project Checkpoint 1
