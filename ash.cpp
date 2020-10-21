@@ -18,8 +18,10 @@
 #define AUTHOR "\e[40;38;5;82;4m"
 #define ESC_AUTHOR "\e[0;24m"
 #define PROMPT "\e[33;1ma\e[0m\e[34;1ms\e[0m\e[33;1mh\e[0m>"
-char promp_message[10] = "whoosh> ";
+#define WORKING_DIRECTORY "\e[92m"
 using namespace std;
+
+string currentPath = "";
 
 vector<string> parse_commands(string input) {
     vector<string> answer;
@@ -49,9 +51,8 @@ string get_working_directory() {
 
 // changes the working directory
 int change_directory(string userInput) {
-    string arguments = userInput.substr(1,userInput.length());
-    cout << arguments << endl;
-    return 0;
+    int rc = chdir(userInput.c_str());
+    return rc;
 }
 
 // exit function called when user enters exit command
@@ -69,7 +70,7 @@ string getInput(string answer) {
 
 // error function to handle all errors that are encountered
 void error() {
-  write(STDERR_FILENO, promp_message, strlen(promp_message));
+  //write(STDERR_FILENO, promp_message, strlen(promp_message));
   exit();
 }
 
@@ -91,32 +92,50 @@ void parseCommands(string userInput){
   cout << parse << parse.length() << endl;
 }
 
+void check_built_in(vector<string> commands) {
+    
+  string temp_command = commands.at(0);
+    
+  if(temp_command.compare("cd") == 0) {
+    if(commands.size() > 1) {
+      change_directory(commands.at(1));
+    } else {
+      cout << "ERROR: Missing Arguments for cd" << endl;
+    }
+  } else if(temp_command.compare("path") == 0) {
+      if(commands.size() > 1) {
+          cout << "Path Before: " << currentPath << endl;
+          currentPath.erase(currentPath.begin(),currentPath.end());
+          for(int i = 1; i < commands.size(); i++) {
+              currentPath += commands.at(i) + "/";
+          }
+          cout << "Path After: " << currentPath << endl;
+      }
+  } else if(temp_command.compare("exit") == 0) {
+      if(commands.size() < 2) {
+          exit();
+      } else {
+        cout << "ERROR: No Arguments expected for exit" << endl;
+      }
+  }
+    
+}
 
 int main(int argv, char** argc) {
 
   string userInput;
 
   while (true) {
-
     
-    cout << get_working_directory() << " " << PROMPT << " ";
+    cout << WORKING_DIRECTORY << get_working_directory() << ESC << " " << PROMPT << " ";
     
     userInput = getInput(userInput);
     
     vector<string> s = parse_commands(userInput);
-    
-      for(int i = 0; i < s.size(); i++) {
-          cout << s.at(i) << endl;
-      }
-      
-    if(userInput == "") {
-        
-    } else if(userInput == "cd") {
-        change_directory(userInput);
-    } else if(userInput == "exit") {
-      exit();
+    if(s.size() > 0){
+      check_built_in(s);
     }
-
+      
   }
 
   return 0;
