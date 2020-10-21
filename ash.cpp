@@ -6,6 +6,7 @@
 */
 #include <iostream>
 #include <string>
+#include <stdio.h>
 #include <cctype>
 #include <sstream>
 #include <cstdlib>
@@ -117,6 +118,14 @@ void check_built_in(vector<string> commands) {
       } else {
         cout << "ERROR: No Arguments expected for exit" << endl;
       }
+  } else {
+    int pid = fork();
+    if(pid == 0){
+      execl("/bin/ls", "ls", "-l", (char *)0);
+    } else {
+        sleep(1);
+
+    }
   }
     
 }
