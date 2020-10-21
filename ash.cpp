@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstring>
 #include <unistd.h>
+#include <vector>
 
 #define ESC "\e[0m"
 #define AUTHOR "\e[40;38;5;82;4m"
@@ -20,10 +21,37 @@
 char promp_message[10] = "whoosh> ";
 using namespace std;
 
+vector<string> parse_commands(string input) {
+    vector<string> answer;
+    string temp_command = "";
+    int i = 0;
+    while(i < input.length()) {
+        if(isspace(input[i]) && temp_command != "") {
+            answer.push_back(temp_command);
+            temp_command = "";
+        }
+        if(!isspace(input[i])) {
+            temp_command += input[i];
+        }
+        i++;
+    }
+    if(temp_command != "") {
+        answer.push_back(temp_command);
+    }
+    return answer;
+}
+
 // gets the string value of the current working directory with max length allocated to 100 chars
 string get_working_directory() {
   char * directory = NULL;
   return string(getcwd(directory,500));
+}
+
+// changes the working directory
+int change_directory(string userInput) {
+    string arguments = userInput.substr(1,userInput.length());
+    cout << arguments << endl;
+    return 0;
 }
 
 // exit function called when user enters exit command
@@ -71,14 +99,20 @@ int main(int argv, char** argc) {
   while (true) {
 
     
-    cout << get_working_directory() << " " << PROMPT;
+    cout << get_working_directory() << " " << PROMPT << " ";
     
     userInput = getInput(userInput);
-
+    
+    vector<string> s = parse_commands(userInput);
+    
+      for(int i = 0; i < s.size(); i++) {
+          cout << s.at(i) << endl;
+      }
+      
     if(userInput == "") {
-
+        
     } else if(userInput == "cd") {
-      cout << chdir("..") << endl;
+        change_directory(userInput);
     } else if(userInput == "exit") {
       exit();
     }
