@@ -2,7 +2,7 @@
   * James Ostmann & Joshua Govan
   * COMP 350 / 001
   * Sep, 26th 2020
-  * Ash Shell Project Checkpoint 1
+  * Ash Shell Project Checkpoint 2
 */
 #include <iostream>
 #include <string>
@@ -14,17 +14,24 @@
 #include <cstring>
 #include <unistd.h>
 #include <vector>
+#include <stdlib.h>
 
+// styles for prompt
 #define ESC "\e[0m"
 #define AUTHOR "\e[40;38;5;82;4m"
 #define ESC_AUTHOR "\e[0;24m"
-#define PROMPT "\e[33;1ma\e[0m\e[34;1ms\e[0m\e[33;1mh\e[0m>"
+#define CARROT ">"
+#define PROMPT "\e[33;1ma\e[0m\e[34;1ms\e[0m\e[33;1mh\e[0m"
 #define WORKING_DIRECTORY "\e[92m"
+#define PATH "\e[93m"
 using namespace std;
 
+// error message
+char error_message[30] = "An error has occurred\n"; 
 string currentPath = "";
 
-vector<string> parse_commands(string input) {
+// parses the current userInput and adds each space separated value to a vector
+vector<string> parseCommands(string input) {
     vector<string> answer;
     string temp_command = "";
     int i = 0;
@@ -45,15 +52,23 @@ vector<string> parse_commands(string input) {
 }
 
 // gets the string value of the current working directory with max length allocated to 100 chars
-string get_working_directory() {
+string getWorkingDirectory() {
   char * directory = NULL;
   return string(getcwd(directory,500));
 }
 
 // changes the working directory
-int change_directory(string userInput) {
+int changeDirectory(string userInput) {
     int rc = chdir(userInput.c_str());
     return rc;
+}
+
+// changes the current path
+void changePath(vector<string> commands) {
+  currentPath.erase(currentPath.begin(),currentPath.end());
+  for(int i = 1; i < commands.size(); i++) {
+    currentPath += commands.at(i) + " ";
+  }
 }
 
 // exit function called when user enters exit command
@@ -71,12 +86,11 @@ string getInput(string answer) {
 
 // error function to handle all errors that are encountered
 void error() {
-  //write(STDERR_FILENO, promp_message, strlen(promp_message));
-  exit();
+  write(STDERR_FILENO, error_message, strlen(error_message));
 }
 
 // TODO: implement parser for individual commmands
-void parseCommands(string userInput){
+void parse_Commands(string userInput){
   string parse;
   bool space = false;
   for(int i = 0; i < userInput.length(); i++) {
@@ -93,59 +107,104 @@ void parseCommands(string userInput){
   cout << parse << parse.length() << endl;
 }
 
-void check_built_in(vector<string> commands) {
-    
+// checks for a built in command and executes it if it is and returns true. otherwise it just retruns false
+bool checkBuiltIn(vector<string> commands) {
+
+  bool executed = true;
+
   string temp_command = commands.at(0);
     
+   // handles build in cd command 
   if(temp_command.compare("cd") == 0) {
-    if(commands.size() > 1) {
-      change_directory(commands.at(1));
+    if(commands.size() > 1 && commands.size() < 3) {
+      int rc = changeDirectory(commands.at(1));
+      if(rc != 0) {
+        error();
+      }
     } else {
-      cout << "ERROR: Missing Arguments for cd" << endl;
+      error();
     }
-  } else if(temp_command.compare("path") == 0) {
-      if(commands.size() > 1) {
-          cout << "Path Before: " << currentPath << endl;
-          currentPath.erase(currentPath.begin(),currentPath.end());
-          for(int i = 1; i < commands.size(); i++) {
-              currentPath += commands.at(i) + "/";
-          }
-          cout << "Path After: " << currentPath << endl;
-      }
-  } else if(temp_command.compare("exit") == 0) {
-      if(commands.size() < 2) {
-          exit();
-      } else {
-        cout << "ERROR: No Arguments expected for exit" << endl;
-      }
-  } else {
-    int pid = fork();
-    if(pid == 0){
-      execl("/bin/ls", "ls", "-l", (char *)0);
-    } else {
-        sleep(1);
 
-    }
-  }
+  // hndles built in path command
+  } else if(temp_command.compare("path") == 0) {
+    changePath(commands);
     
+  // handles built in exit command
+  } else if(temp_command.compare("exit") == 0) {
+    if(commands.size() < 2) {
+      exit();
+    } else {
+      error();
+    }
+
+  // handles not a built in command and return false
+  } else {
+    return false;
+  }
+  // was a built in command so return true;
+  return true;
+}
+
+
+// gets commands from input vector and puts them in arguments array for execv()
+void setArguments(char *arguments[], vector<string> commands) {
+  for(int i = 1; i < commands.size(); i++) {
+    arguments[i] = (char*)commands.at(i).c_str();
+  }
+}
+
+//TODO: implement checking to see if command exists in path
+bool verifyPathCommand(string command) {
+  return true;
+}
+
+//TODO: implement checking to see if ">" is in commands for redirection 
+bool redirectionEnabled(vector<string> commands) {
+  return true;
+}
+
+// TODO: finish implementing executeOther for execv() commands
+void executeOther(vector<string> commands) {
+  pid_t child_pid;
+  int status;
+  
+  child_pid = fork();
+  char* arguments[commands.size() + 1];
+
+  // add path to command
+  string test = "/bin/";
+  test += (char*)commands.at(0).c_str();
+  arguments[0] = (char*)test.c_str();
+  arguments[commands.size()] = NULL;
+  setArguments(arguments, commands);
+
+  // if child process execute command
+  if(child_pid == 0) {
+    execv(arguments[0],arguments);
+    exit(0);
+  } else {
+    waitpid(child_pid, &status, 0);
+  }
 }
 
 int main(int argv, char** argc) {
 
   string userInput;
 
+  // main loop for program
   while (true) {
     
-    cout << WORKING_DIRECTORY << get_working_directory() << ESC << " " << PROMPT << " ";
-    
+    cout << PROMPT << " " << PATH << currentPath << ESC << CARROT;
     userInput = getInput(userInput);
     
-    vector<string> s = parse_commands(userInput);
-    if(s.size() > 0){
-      check_built_in(s);
+    // commands from userInput
+    vector<string> commands = parseCommands(userInput);
+    if(commands.size() > 0){
+      bool builtIn = checkBuiltIn(commands);
+      if(!builtIn) {
+        executeOther(commands);
+      }
     }
-      
   }
-
   return 0;
 }
