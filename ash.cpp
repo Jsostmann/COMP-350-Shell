@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <vector>
 #include <stdlib.h>
+#include <sys/wait.h>
 
 // styles for prompt
 #define ESC "\e[0m"
