@@ -1,8 +1,8 @@
 /*
   * James Ostmann & Joshua Govan
   * COMP 350 / 001
-  * Sep, 26th 2020
-  * Ash Shell Project Checkpoint 2
+  * Nov, 7th 2020
+  * Ash Shell Project Checkpoint 3
 */
 #include <iostream>
 #include <string>
@@ -16,6 +16,8 @@
 #include <vector>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <fcntl.h>
+
 
 // styles for prompt
 #define ESC "\e[0m"
@@ -55,7 +57,7 @@ vector<string> parseCommands(string input) {
 // gets the string value of the current working directory with max length allocated to 100 chars
 string getWorkingDirectory() {
   char * directory = NULL;
-  return string(getcwd(directory,500));
+  return string(getcwd(directory,500)) + " ";
 }
 
 // changes the working directory
@@ -146,45 +148,76 @@ bool checkBuiltIn(vector<string> commands) {
   return true;
 }
 
-
-// gets commands from input vector and puts them in arguments array for execv()
-void setArguments(char *arguments[], vector<string> commands) {
-  for(int i = 1; i < commands.size(); i++) {
-    arguments[i] = (char*)commands.at(i).c_str();
-  }
-}
-
 //TODO: implement checking to see if command exists in path
 bool verifyPathCommand(string command) {
   return true;
 }
 
 //TODO: implement checking to see if ">" is in commands for redirection 
-bool redirectionEnabled(vector<string> commands) {
-  return true;
+int redirectionEnabled(vector<string> commands) {
+  int redirectionCount = 0;
+  for(int i = 0; i < commands.size(); i++) {
+    if(commands.at(i).compare(">") == 0) {
+      redirectionCount += 1;
+    }
+  }
+  return redirectionCount;
 }
 
-// TODO: finish implementing executeOther for execv() commands
+// handles execution of commands not build in including redirection
 void executeOther(vector<string> commands) {
   pid_t child_pid;
-  int status;
+  int outputFile;
+  string outputFileName = "";
+
+  int redirectionFound = redirectionEnabled(commands);
   
+  // if more than 1 redirection symbols found, through an error
+  if(redirectionFound > 1) {
+    error();
+  }
+  
+  // if only 1 redirection symbol found and last command is a string
+  if(redirectionFound == 1 && commands.back().compare(">") != 0) {
+    outputFileName = commands.back();
+    commands.pop_back();
+    commands.pop_back();
+    outputFile = open(outputFileName.c_str(), O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+  }
+    
+  // prepare arguments for execvp() command
+  int argSize = commands.size();
+  char* arguments[argSize];
+  for(int i = 0; i < argSize; i++) {
+    arguments[i] = (char*)commands.at(i).c_str();
+  }
+  arguments[argSize] = NULL;
+  
+  // create child process
   child_pid = fork();
-  char* arguments[commands.size() + 1];
 
-  // add path to command
-  string test = "/bin/";
-  test += (char*)commands.at(0).c_str();
-  arguments[0] = (char*)test.c_str();
-  arguments[commands.size()] = NULL;
-  setArguments(arguments, commands);
-
+  // if error print error
+  if(child_pid == -1) {
+    error();
+      
   // if child process execute command
-  if(child_pid == 0) {
-    execv(arguments[0],arguments);
-    exit(0);
-  } else {
-    waitpid(child_pid, &status, 0);
+  } else if (child_pid == 0) {
+    // if redirection enabled change stdout and stderr to point to outputfile name
+    if(redirectionFound == 1) {
+      dup2(outputFile, 1);
+      dup2(outputFile, 2);
+      close(outputFile);
+    }
+    if(execvp(arguments[0],arguments) == -1) {
+      error();
+      exit(0);
+    }
+      
+  // if parent process, wait for child to finish
+  } else if(child_pid > 0) {
+    if(wait(0) == -1) {
+      error();
+    }
   }
 }
 
@@ -194,10 +227,8 @@ int main(int argv, char** argc) {
 
   // main loop for program
   while (true) {
-    
-    cout << PROMPT << " " << PATH << currentPath << ESC << CARROT;
+    cout << PROMPT << " " << WORKING_DIRECTORY << getWorkingDirectory() << ESC << CARROT;
     userInput = getInput(userInput);
-    
     // commands from userInput
     vector<string> commands = parseCommands(userInput);
     if(commands.size() > 0){
