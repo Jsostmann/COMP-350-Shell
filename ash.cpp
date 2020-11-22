@@ -84,16 +84,12 @@ void exit() {
 }
 
 // function to get userinput when entered from cin
-string getInputInteractive(string answer) {
+string getInput(string answer) {
   getline(cin, answer);
   return answer;
 }
 
-string getInputBatch(string answer) {
-  getline(cin, answer);
-  return answer;
-}
-
+// checks if batch file is enabled by checking to see if 1 batch file argument is passed to the program
 bool batchEnabled(int argSize) {
   return argSize == 2;
 }
@@ -177,6 +173,7 @@ int redirectionEnabled(vector<string> commands) {
 
 // handles execution of commands not build in including redirection
 void executeOther(vector<string> commands) {
+    
   pid_t child_pid;
   int outputFile;
   string outputFileName = "";
@@ -236,45 +233,30 @@ int main(int argv, char** argc) {
 
   string userInput;
   ifstream batchInput;
+    
   // check if batch file reading is enabled
   if(batchEnabled(argv)) {
-      
+    
     batchInput.open((char*)argc[1]);
     
     if(!batchInput) {
       error();
       exit(0);
     }
-    
+
     cin.rdbuf(batchInput.rdbuf());
   }
-    
-  /*if(batchEnabled(argv)) {
-    //ifstream inputFile;
-    //inputFile.open((char*)argc[1]);
-      
-    ifstream inputFile((char*)argc[1]);
-    ifstream(cin);
-    getline(inputFile,userInput);
-      
-    if(!inputFile) {
-      cout << "No batch file found" << endl;
-      exit(0);
-    }
-      
-    cout << "input: " << userInput << endl;
 
-    inputFile.close();
-  }*/
-    
   // main loop for program
   while (true) {
-      
-    if(argv == 1) {
+    
+    // only print out prompt if in interactive mode
+    if(!batchEnabled(argv)) {
       cout << PROMPT << " " << WORKING_DIRECTORY << getWorkingDirectory() << ESC << CARROT;
     }
+    
+    userInput = getInput(userInput);
       
-    userInput = getInputInteractive(userInput);
     // commands from userInput
     vector<string> commands = parseCommands(userInput);
     if(commands.size() > 0){
@@ -284,5 +266,6 @@ int main(int argv, char** argc) {
       }
     }
   }
+    
   return 0;
 }
