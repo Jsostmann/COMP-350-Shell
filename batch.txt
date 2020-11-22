@@ -1,0 +1,9 @@
+ls
+cd ..
+ls
+cd ash
+ls -al
+touch b.txt
+ls -al > b.txt
+exit
+

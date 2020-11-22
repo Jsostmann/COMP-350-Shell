@@ -235,15 +235,20 @@ void executeOther(vector<string> commands) {
 int main(int argv, char** argc) {
 
   string userInput;
-    ifstream input;
-    if(argv == 2) {
-        input.open((char*)argc[1]);
-        cout << "batch enabled" << endl;
-    }else {
-        ifstream gnput(cin);
-        cout << "cin enabled" << endl;
-
+  ifstream batchInput;
+  // check if batch file reading is enabled
+  if(batchEnabled(argv)) {
+      
+    batchInput.open((char*)argc[1]);
+    
+    if(!batchInput) {
+      error();
+      exit(0);
     }
+    
+    cin.rdbuf(batchInput.rdbuf());
+  }
+    
   /*if(batchEnabled(argv)) {
     //ifstream inputFile;
     //inputFile.open((char*)argc[1]);
@@ -264,7 +269,11 @@ int main(int argv, char** argc) {
     
   // main loop for program
   while (true) {
-    cout << PROMPT << " " << WORKING_DIRECTORY << getWorkingDirectory() << ESC << CARROT;
+      
+    if(argv == 1) {
+      cout << PROMPT << " " << WORKING_DIRECTORY << getWorkingDirectory() << ESC << CARROT;
+    }
+      
     userInput = getInputInteractive(userInput);
     // commands from userInput
     vector<string> commands = parseCommands(userInput);
