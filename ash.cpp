@@ -1,8 +1,8 @@
 /*
   * James Ostmann & Joshua Govan
   * COMP 350 / 001
-  * Nov, 7th 2020
-  * Ash Shell Project Checkpoint 3
+  * Nov, 24th 2020
+  * Ash Shell Project Final Checkpoint
 */
 #include <iostream>
 #include <string>
@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <fstream>
+
 
 
 // styles for prompt
@@ -82,9 +84,18 @@ void exit() {
 }
 
 // function to get userinput when entered from cin
-string getInput(string answer) {
+string getInputInteractive(string answer) {
   getline(cin, answer);
   return answer;
+}
+
+string getInputBatch(string answer) {
+  getline(cin, answer);
+  return answer;
+}
+
+bool batchEnabled(int argSize) {
+  return argSize == 2;
 }
 
 // error function to handle all errors that are encountered
@@ -224,11 +235,37 @@ void executeOther(vector<string> commands) {
 int main(int argv, char** argc) {
 
   string userInput;
+    ifstream input;
+    if(argv == 2) {
+        input.open((char*)argc[1]);
+        cout << "batch enabled" << endl;
+    }else {
+        ifstream gnput(cin);
+        cout << "cin enabled" << endl;
 
+    }
+  /*if(batchEnabled(argv)) {
+    //ifstream inputFile;
+    //inputFile.open((char*)argc[1]);
+      
+    ifstream inputFile((char*)argc[1]);
+    ifstream(cin);
+    getline(inputFile,userInput);
+      
+    if(!inputFile) {
+      cout << "No batch file found" << endl;
+      exit(0);
+    }
+      
+    cout << "input: " << userInput << endl;
+
+    inputFile.close();
+  }*/
+    
   // main loop for program
   while (true) {
     cout << PROMPT << " " << WORKING_DIRECTORY << getWorkingDirectory() << ESC << CARROT;
-    userInput = getInput(userInput);
+    userInput = getInputInteractive(userInput);
     // commands from userInput
     vector<string> commands = parseCommands(userInput);
     if(commands.size() > 0){
