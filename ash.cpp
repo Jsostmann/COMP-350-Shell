@@ -32,7 +32,9 @@
 using namespace std;
 
 // error message
-char error_message[30] = "An error has occurred\n"; 
+char error_message[30] = "An error has occurred\n";
+
+// our path ENV variable
 string currentPath = "/bin";
 
 // parses the current userInput and adds each space separated value to a vector
@@ -68,7 +70,7 @@ int changeDirectory(string userInput) {
     return rc;
 }
 
-// changes the current path
+// changes the current path and sets the actual PATH enviroment
 void changePath(vector<string> commands) {
   
   string envPath = "";
@@ -131,9 +133,8 @@ void parse_Commands(string userInput){
 
 // checks for a built in command and executes it if it is and returns true. otherwise it just retruns false
 bool checkBuiltIn(vector<string> commands) {
-
+    
   bool executed = true;
-
   string temp_command = commands.at(0);
     
    // handles build in cd command 
@@ -167,7 +168,7 @@ bool checkBuiltIn(vector<string> commands) {
   return true;
 }
 
-//TODO: implement checking to see if command exists in path
+// checks to see if any of our paths contain or have access to our specified command
 bool verifyPathCommand(string command) {
     
   vector<string> paths = parseCommands(currentPath);
@@ -191,7 +192,7 @@ bool verifyPathCommand(string command) {
   return false;
 }
 
-//TODO: implement checking to see if ">" is in commands for redirection 
+// checks to see if ">" is in commands for redirection
 int redirectionEnabled(vector<string> commands) {
   int redirectionCount = 0;
   for(int i = 0; i < commands.size(); i++) {
@@ -227,6 +228,7 @@ void executeOther(vector<string> commands) {
   // check if command is found in path
   bool inPath = verifyPathCommand(commands.at(0));
 
+  // if none of our paths contain the command return to main program
   if(!inPath) {
     error();
     return;
@@ -272,6 +274,8 @@ int main(int argv, char** argc) {
 
   string userInput;
   ifstream batchInput;
+    
+  // sets our begining path to /bin
   setenv("PATH", currentPath.c_str(), true);
     
   cout << getenv("PATH") << endl;
