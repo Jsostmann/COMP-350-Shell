@@ -33,7 +33,7 @@ using namespace std;
 
 // error message
 char error_message[30] = "An error has occurred\n"; 
-string currentPath = "";
+string currentPath = "/bin";
 
 // parses the current userInput and adds each space separated value to a vector
 vector<string> parseCommands(string input) {
@@ -70,10 +70,22 @@ int changeDirectory(string userInput) {
 
 // changes the current path
 void changePath(vector<string> commands) {
+  
+  string envPath = "";
+    
   currentPath.erase(currentPath.begin(),currentPath.end());
+    
   for(int i = 1; i < commands.size(); i++) {
+      
     currentPath += commands.at(i) + " ";
+    envPath += commands.at(i);
+      
+    if(i != commands.size() - 1) {
+      envPath += ":";
+    }
   }
+    
+  setenv("PATH",envPath.c_str(),true);
 }
 
 // exit function called when user enters exit command
@@ -157,7 +169,26 @@ bool checkBuiltIn(vector<string> commands) {
 
 //TODO: implement checking to see if command exists in path
 bool verifyPathCommand(string command) {
-  return true;
+    
+  vector<string> paths = parseCommands(currentPath);
+  int result;
+  string tempPath = "";
+    
+  for (int i = 0; i < paths.size(); i++) {
+      
+    tempPath += paths.at(i);
+    tempPath += "/";
+    tempPath += command;
+    result = access(tempPath.c_str(),F_OK);
+      
+    if(result == 0) {
+      return true;
+    }
+      
+    tempPath.erase(tempPath.begin(),tempPath.end());
+  }
+
+  return false;
 }
 
 //TODO: implement checking to see if ">" is in commands for redirection 
@@ -191,6 +222,14 @@ void executeOther(vector<string> commands) {
     commands.pop_back();
     commands.pop_back();
     outputFile = open(outputFileName.c_str(), O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+  }
+    
+  // check if command is found in path
+  bool inPath = verifyPathCommand(commands.at(0));
+
+  if(!inPath) {
+    error();
+    return;
   }
     
   // prepare arguments for execvp() command
@@ -233,6 +272,9 @@ int main(int argv, char** argc) {
 
   string userInput;
   ifstream batchInput;
+  setenv("PATH", currentPath.c_str(), true);
+    
+  cout << getenv("PATH") << endl;
     
   // check if batch file reading is enabled
   if(batchEnabled(argv)) {
