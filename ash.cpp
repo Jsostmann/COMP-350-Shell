@@ -39,23 +39,27 @@ string currentPath = "/bin";
 
 // parses the current userInput and adds each space separated value to a vector
 vector<string> parseCommands(string input) {
-    vector<string> answer;
-    string temp_command = "";
-    int i = 0;
-    while(i < input.length()) {
-        if(isspace(input[i]) && temp_command != "") {
-            answer.push_back(temp_command);
-            temp_command = "";
-        }
-        if(!isspace(input[i])) {
-            temp_command += input[i];
-        }
-        i++;
+  vector<string> answer;
+  string temp_command = "";
+  int i = 0;
+  while(i < input.length()) {
+      
+    if(isspace(input[i]) && temp_command != "") {
+      answer.push_back(temp_command);
+      temp_command = "";
     }
-    if(temp_command != "") {
-        answer.push_back(temp_command);
+      
+    if(!isspace(input[i])) {
+      temp_command += input[i];
     }
-    return answer;
+      i++;
+  }
+    
+  if(temp_command != "") {
+    answer.push_back(temp_command);
+  }
+    
+  return answer;
 }
 
 // gets the string value of the current working directory with max length allocated to 100 chars
@@ -66,13 +70,12 @@ string getWorkingDirectory() {
 
 // changes the working directory
 int changeDirectory(string userInput) {
-    int rc = chdir(userInput.c_str());
-    return rc;
+  int rc = chdir(userInput.c_str());
+  return rc;
 }
 
 // changes the current path and sets the actual PATH enviroment
 void changePath(vector<string> commands) {
-  
   string envPath = "";
     
   currentPath.erase(currentPath.begin(),currentPath.end());
@@ -86,7 +89,6 @@ void changePath(vector<string> commands) {
       envPath += ":";
     }
   }
-    
   setenv("PATH",envPath.c_str(),true);
 }
 
@@ -188,7 +190,6 @@ bool verifyPathCommand(string command) {
       
     tempPath.erase(tempPath.begin(),tempPath.end());
   }
-
   return false;
 }
 
@@ -257,6 +258,7 @@ void executeOther(vector<string> commands) {
       dup2(outputFile, 2);
       close(outputFile);
     }
+      
     if(execvp(arguments[0],arguments) == -1) {
       error();
       exit(0);
@@ -271,14 +273,13 @@ void executeOther(vector<string> commands) {
 }
 
 int main(int argv, char** argc) {
-
+  
+  // string for userInput and ifstream for possible batch file input
   string userInput;
   ifstream batchInput;
     
   // sets our begining path to /bin
   setenv("PATH", currentPath.c_str(), true);
-    
-  cout << getenv("PATH") << endl;
     
   // check if batch file reading is enabled
   if(batchEnabled(argv)) {
@@ -301,6 +302,7 @@ int main(int argv, char** argc) {
       cout << PROMPT << " " << WORKING_DIRECTORY << getWorkingDirectory() << ESC << CARROT;
     }
     
+    // get input
     userInput = getInput(userInput);
       
     // commands from userInput
@@ -312,6 +314,5 @@ int main(int argv, char** argc) {
       }
     }
   }
-    
   return 0;
 }
