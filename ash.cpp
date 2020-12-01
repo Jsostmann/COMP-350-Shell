@@ -204,6 +204,17 @@ int redirectionEnabled(vector<string> commands) {
   return redirectionCount;
 }
 
+// checks to see if regular redirection ">>" is in the commands
+int regularRedirectionEnabled(vector<string> commands) {
+  int regularRedirectionCount = 0;
+  for(int i = 0; i < commands.size(); i++) {
+    if(commands.at(i).compare(">>") == 0) {
+      regularRedirectionCount++;
+    }
+  }
+  return regularRedirectionCount;
+}
+
 // handles execution of commands not build in including redirection
 void executeOther(vector<string> commands) {
     
@@ -212,14 +223,15 @@ void executeOther(vector<string> commands) {
   string outputFileName = "";
 
   int redirectionFound = redirectionEnabled(commands);
-  
+  int regularRedirectionFound = regularRedirectionEnabled(commands);
+    
   // if more than 1 redirection symbols found, through an error
-  if(redirectionFound > 1) {
+  if(redirectionFound > 1 || regularRedirectionFound > 1) {
     error();
   }
   
   // if only 1 redirection symbol found and last command is a string
-  if(redirectionFound == 1 && commands.back().compare(">") != 0) {
+  if(redirectionFound == 1 || regularRedirectionFound == 1 && commands.back().compare(">") != 0) {
     outputFileName = commands.back();
     commands.pop_back();
     commands.pop_back();
@@ -253,7 +265,7 @@ void executeOther(vector<string> commands) {
   // if child process execute command
   } else if (child_pid == 0) {
     // if redirection enabled change stdout and stderr to point to outputfile name
-    if(redirectionFound == 1) {
+    if(redirectionFound == 1 || regularRedirectionFound == 1) {
       dup2(outputFile, 1);
       dup2(outputFile, 2);
       close(outputFile);
